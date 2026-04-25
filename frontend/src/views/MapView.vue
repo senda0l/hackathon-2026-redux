@@ -62,6 +62,20 @@
           </div>
           <p v-if="selectedZone.description" class="text-slate-500 pt-1 border-t">{{ selectedZone.description }}</p>
         </div>
+        <button
+          v-if="auth.isCompany && selectedZone.status === 'AVAILABLE'"
+          @click="submitSelectedZone"
+          :disabled="submitting"
+          class="mt-4 w-full text-center bg-green-600 text-white rounded-xl py-2 text-sm font-medium hover:bg-green-700 disabled:opacity-60"
+        >
+          {{ submitting ? 'Submitting...' : 'Request This Zone' }}
+        </button>
+        <p
+          v-if="auth.isCompany && selectedZone.status === 'AVAILABLE'"
+          class="text-xs text-slate-500 mt-2"
+        >
+          Tip: you can also draw a smaller parcel with the polygon tool.
+        </p>
         <router-link
           v-if="selectedZone.status === 'IN_AUCTION'"
           :to="`/auctions`"
@@ -69,6 +83,25 @@
         >
           View Active Auction →
         </router-link>
+      </div>
+    </transition>
+
+    <!-- Zone loading diagnostics -->
+    <transition name="slide">
+      <div
+        v-if="zonesError || zoneCount === 0"
+        class="absolute top-20 left-4 w-[26rem] bg-white rounded-2xl shadow-2xl p-4 z-10 border"
+        :class="zonesError ? 'border-red-200' : 'border-amber-200'"
+      >
+        <p v-if="zonesError" class="text-sm font-semibold text-red-700">
+          {{ zonesError }}
+        </p>
+        <p v-else class="text-sm font-semibold text-amber-700">
+          No zones are visible yet (0 features returned by API).
+        </p>
+        <p class="text-xs text-slate-600 mt-2">
+          Expected API: <code>{{ apiBaseUrl }}/zones</code>
+        </p>
       </div>
     </transition>
 
@@ -97,6 +130,18 @@
       class="absolute bottom-8 right-4 bg-white/90 rounded-xl px-4 py-2 z-10 text-sm text-slate-600 shadow">
       🖊 Use the polygon tool to select a green zone
     </div>
+    <div
+      v-else-if="!auth.isLoggedIn"
+      class="absolute bottom-8 right-4 bg-white/90 rounded-xl px-4 py-2 z-10 text-sm text-slate-600 shadow"
+    >
+      Login as a company to draw parcels and submit requests.
+    </div>
+    <div
+      v-else-if="!auth.isCompany"
+      class="absolute bottom-8 right-4 bg-white/90 rounded-xl px-4 py-2 z-10 text-sm text-slate-600 shadow"
+    >
+      Your current role is read-only here. Use a company account to submit parcel requests.
+    </div>
   </div>
 </template>
 
@@ -109,10 +154,11 @@ import api from '../api'
 
 const auth = useAuthStore()
 const router = useRouter()
-const { selectedZone, selectedDrawZone, drawnParcel, drawError } = useMap('map')
+const { selectedZone, selectedZoneGeometry, selectedDrawZone, drawnParcel, drawError, zonesError, zoneCount } = useMap('map')
 const submitting = ref(false)
 const submitMsg = ref('')
 const submitErr = ref('')
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api'
 
 const legend = [
   { label: 'Residential (available)', color: '#22c55e' },
@@ -150,6 +196,29 @@ async function submitParcel() {
   try {
     await api.post(`/zones/${selectedDrawZone.value.id}/requests`, {
       geometry: drawnParcel.value.geometry,
+    })
+    submitMsg.value = 'Request submitted. Government review is now required.'
+    router.push('/auctions')
+  } catch (e: any) {
+    submitErr.value = e.response?.data?.message ?? 'Failed to submit request'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function submitSelectedZone() {
+  if (!selectedZone.value?.id || !selectedZoneGeometry.value) {
+    submitErr.value = 'Select an available zone first.'
+    return
+  }
+
+  submitting.value = true
+  submitErr.value = ''
+  submitMsg.value = ''
+
+  try {
+    await api.post(`/zones/${selectedZone.value.id}/requests`, {
+      geometry: selectedZoneGeometry.value,
     })
     submitMsg.value = 'Request submitted. Government review is now required.'
     router.push('/auctions')

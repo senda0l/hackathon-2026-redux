@@ -9,9 +9,12 @@ export function useMap(containerId: string) {
   const map = ref<any | null>(null)
   const draw = ref<any | null>(null)
   const selectedZone = ref<any | null>(null)
+  const selectedZoneGeometry = ref<any | null>(null)
   const selectedDrawZone = ref<any | null>(null)
   const drawnParcel = ref<any | null>(null)
   const drawError = ref<string>('')
+  const zonesError = ref<string>('')
+  const zoneCount = ref<number>(0)
   const auth = useAuthStore()
 
   onMounted(async () => {
@@ -36,7 +39,12 @@ export function useMap(containerId: string) {
     const mapRef = map.value as any
 
     mapRef.on('load', async () => {
-      await loadZones()
+      try {
+        await loadZones()
+      } catch {
+        zonesError.value =
+          'Could not load zones from API. Check backend server and VITE_API_BASE_URL.'
+      }
 
       // Only companies can draw parcels
       if (auth.isCompany) {
@@ -45,8 +53,12 @@ export function useMap(containerId: string) {
 
       // Click to inspect zone
       mapRef.on('click', 'zones-fill', (e: any) => {
-        const props = e.features?.[0]?.properties
-        if (props) selectedZone.value = props
+        const feature = e.features?.[0]
+        const props = feature?.properties
+        if (props) {
+          selectedZone.value = props
+          selectedZoneGeometry.value = feature.geometry
+        }
       })
 
       mapRef.on('mouseenter', 'zones-fill', () => {
@@ -61,8 +73,10 @@ export function useMap(containerId: string) {
   onUnmounted(() => map.value?.remove())
 
   async function loadZones() {
+    zonesError.value = ''
     const res = await api.get('/zones')
     const geojson = res.data
+    zoneCount.value = Array.isArray(geojson?.features) ? geojson.features.length : 0
 
     if (map.value!.getSource('zones')) {
       ;(map.value!.getSource('zones') as maplibregl.GeoJSONSource).setData(geojson)
@@ -88,7 +102,7 @@ export function useMap(containerId: string) {
           ['==', ['get', 'type'], 'COMMERCIAL'], '#f59e0b',
           '#8b5cf6',
         ],
-        'fill-opacity': 0.45,
+        'fill-opacity': 0.68,
       },
     })
 
@@ -172,5 +186,14 @@ export function useMap(containerId: string) {
     selectedZone.value = availableZone.properties
   }
 
-  return { map, selectedZone, selectedDrawZone, drawnParcel, drawError }
+  return {
+    map,
+    selectedZone,
+    selectedZoneGeometry,
+    selectedDrawZone,
+    drawnParcel,
+    drawError,
+    zonesError,
+    zoneCount,
+  }
 }
