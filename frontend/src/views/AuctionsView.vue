@@ -4,10 +4,11 @@
       <div class="flex items-center justify-between mb-6">
         <div>
           <h1 class="text-2xl font-bold text-slate-800">Active Auctions</h1>
-          <p class="text-xs text-slate-500">For: {{ auth.userEmail || 'Guest' }} • {{ auth.role || 'PUBLIC' }}</p>
+          <p class="text-xs text-slate-500">For: {{ auth.companyName || auth.userEmail || 'Guest' }}</p>
         </div>
         <div class="flex items-center gap-3">
           <router-link to="/tenders" class="text-sm text-indigo-600 hover:underline">View Tenders</router-link>
+          <router-link v-if="auth.isCompany" to="/my-activity" class="text-sm text-emerald-600 hover:underline">My Activity</router-link>
           <router-link to="/" class="text-sm text-blue-600 hover:underline">← Back to Map</router-link>
         </div>
       </div>
@@ -33,13 +34,6 @@
           <router-link :to="`/auctions/${a.id}`"
             class="bg-blue-600 text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-blue-700">
             View →
-          </router-link>
-          <router-link
-            v-if="a.tender"
-            :to="`/tenders/${a.tender.id}`"
-            class="ml-2 bg-indigo-600 text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-indigo-700"
-          >
-            Tender →
           </router-link>
         </div>
       </div>

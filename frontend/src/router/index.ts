@@ -24,6 +24,11 @@ const router = createRouter({
       component: () => import('../views/TenderDetail.vue'),
     },
     {
+      path: '/my-activity',
+      component: () => import('../views/MyActivityView.vue'),
+      meta: { requiresRole: 'COMPANY' },
+    },
+    {
       path: '/admin',
       component: () => import('../views/AdminView.vue'),
       meta: { requiresRole: 'GOV_ADMIN' },

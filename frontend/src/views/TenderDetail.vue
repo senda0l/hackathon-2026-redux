@@ -5,7 +5,7 @@
         <router-link to="/" class="text-sm text-blue-600 hover:underline">← Back to map</router-link>
         <div class="flex items-center gap-3">
           <router-link to="/tenders" class="text-sm text-indigo-600 hover:underline">All Tenders</router-link>
-          <span class="text-xs text-slate-500">User: {{ auth.userEmail || 'Guest' }} • {{ auth.role || 'PUBLIC' }}</span>
+          <span class="text-xs text-slate-500">User: {{ auth.companyName || auth.userEmail || 'Guest' }}</span>
         </div>
       </div>
 
@@ -14,7 +14,7 @@
       <template v-else-if="tender">
         <div class="rounded-2xl bg-white p-6 shadow">
           <h1 class="text-xl font-bold text-slate-800">Tender {{ tender.id }}</h1>
-          <p class="mt-1 text-sm text-slate-500">Zone: {{ tender.auction?.zone?.type || 'N/A' }}</p>
+          <p class="mt-1 text-sm text-slate-500">Zone: {{ tender.zone?.type || 'N/A' }}</p>
           <p class="text-sm text-slate-500">Status: {{ tender.status }}</p>
           <p class="text-sm text-slate-500">Deadline: {{ new Date(tender.deadline).toLocaleString() }}</p>
         </div>

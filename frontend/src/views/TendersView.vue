@@ -5,11 +5,12 @@
         <div>
           <h1 class="text-2xl font-bold text-slate-800">Active Tenders</h1>
           <p class="text-xs text-slate-500">
-            Account: {{ auth.userEmail || 'Guest' }} • Role: {{ auth.role || 'PUBLIC' }}
+            Account: {{ auth.companyName || auth.userEmail || 'Guest' }}
           </p>
         </div>
         <div class="flex items-center gap-3">
           <router-link to="/auctions" class="text-sm text-indigo-600 hover:underline">View Auctions</router-link>
+          <router-link v-if="auth.isCompany" to="/my-activity" class="text-sm text-emerald-600 hover:underline">My Activity</router-link>
           <router-link to="/" class="text-sm text-blue-600 hover:underline">← Back to Map</router-link>
         </div>
       </div>

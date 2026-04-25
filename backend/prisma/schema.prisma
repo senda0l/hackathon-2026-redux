@@ -94,6 +94,7 @@ model ParcelRequest {
   company     User          @relation("CompanyParcelRequests", fields: [companyId], references: [id])
   companyId   String
   geometry    Json
+  requestedType ZoneType?
   status      RequestStatus @default(PENDING)
   note        String?
   reviewedBy  User?         @relation("ReviewedParcelRequests", fields: [reviewedById], references: [id])
@@ -128,7 +129,6 @@ model Auction {
 
   bids      Bid[]
   finalists AuctionFinalist[]
-  tender    Tender?
 }
 
 model Bid {
@@ -154,8 +154,6 @@ model AuctionFinalist {
 
 model Tender {
   id        String       @id @default(uuid())
-  auction   Auction?     @relation(fields: [auctionId], references: [id])
-  auctionId String?      @unique
   zone      Zone         @relation(fields: [zoneId], references: [id])
   zoneId    String
   deadline  DateTime

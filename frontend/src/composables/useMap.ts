@@ -94,9 +94,9 @@ export function useMap(containerId: string) {
         'fill-color': [
           'case',
           ['==', ['get', 'status'], 'RESTRICTED'], '#ef4444',
-          ['==', ['get', 'status'], 'IN_AUCTION'], '#f97316',
-          ['==', ['get', 'status'], 'IN_TENDER'], '#6366f1',
-          ['==', ['get', 'status'], 'AWARDED'], '#64748b',
+          ['==', ['get', 'status'], 'IN_AUCTION'], '#ec4899',
+          ['==', ['get', 'status'], 'IN_TENDER'], '#06b6d4',
+          ['==', ['get', 'status'], 'AWARDED'], '#334155',
           ['==', ['get', 'type'], 'RESIDENTIAL'], '#22c55e',
           ['==', ['get', 'type'], 'INDUSTRIAL'], '#3b82f6',
           ['==', ['get', 'type'], 'COMMERCIAL'], '#f59e0b',

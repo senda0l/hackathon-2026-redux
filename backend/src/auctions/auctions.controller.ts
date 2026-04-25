@@ -12,6 +12,13 @@ export class AuctionsController {
     return this.auctions.getAll()
   }
 
+  @Get('bids/mine')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('COMPANY')
+  getMyBids(@Request() req) {
+    return this.auctions.getMyBids(req.user.id)
+  }
+
   @Get(':id')
   getOne(@Param('id') id: string) {
     return this.auctions.getById(id)

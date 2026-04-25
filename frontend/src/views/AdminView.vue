@@ -44,6 +44,7 @@
             <div v-for="request in pendingRequests" :key="request.id" class="rounded-xl border border-slate-200 p-4">
               <p class="text-sm font-semibold text-slate-800">Zone {{ request.zone?.type }} • {{ request.zone?.id }}</p>
               <p class="text-xs text-slate-500">Company: {{ request.company?.companyName || request.company?.email }}</p>
+              <p class="text-xs text-slate-500">Requested type: {{ request.requestedType || request.zone?.type }}</p>
               <p class="text-xs text-slate-500">Current zone status: {{ request.zone?.status }}</p>
 
               <div class="mt-3 space-y-2">
