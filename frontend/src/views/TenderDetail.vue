@@ -1,7 +1,13 @@
 <template>
   <div class="min-h-screen bg-slate-50 p-6">
     <div class="mx-auto max-w-5xl space-y-5">
-      <router-link to="/" class="text-sm text-blue-600 hover:underline">← Back to map</router-link>
+      <div class="flex items-center justify-between">
+        <router-link to="/" class="text-sm text-blue-600 hover:underline">← Back to map</router-link>
+        <div class="flex items-center gap-3">
+          <router-link to="/tenders" class="text-sm text-indigo-600 hover:underline">All Tenders</router-link>
+          <span class="text-xs text-slate-500">User: {{ auth.userEmail || 'Guest' }} • {{ auth.role || 'PUBLIC' }}</span>
+        </div>
+      </div>
 
       <div v-if="loading" class="rounded-2xl bg-white p-8 text-center text-slate-500 shadow">Loading tender...</div>
 

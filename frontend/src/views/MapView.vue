@@ -13,7 +13,14 @@
         <router-link to="/auctions" class="bg-white rounded-xl shadow px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
           Auctions
         </router-link>
+        <router-link to="/tenders" class="bg-white rounded-xl shadow px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+          Tenders
+        </router-link>
         <template v-if="auth.isLoggedIn">
+          <div class="hidden md:flex items-center bg-white rounded-xl shadow px-3 py-2 text-xs text-slate-600">
+            <span class="font-semibold text-slate-700 mr-1">{{ auth.companyName }}</span>
+            <span>• {{ auth.userEmail }}</span>
+          </div>
           <router-link v-if="auth.isGov" to="/admin" class="bg-blue-600 text-white rounded-xl px-4 py-2 text-sm font-medium">
             Admin Panel
           </router-link>

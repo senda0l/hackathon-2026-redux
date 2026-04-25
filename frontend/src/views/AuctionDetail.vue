@@ -9,17 +9,23 @@
           <p class="text-slate-500 text-sm">Min Bid: ${{ auction.minBid?.toLocaleString() }}</p>
           <p class="text-slate-500 text-sm">Ends: {{ new Date(auction.endDate).toLocaleString() }}</p>
           <p class="text-slate-500 text-sm">Max Finalists: {{ auction.maxFinalists }}</p>
+          <p class="text-slate-500 text-sm">Publication: {{ auction.zone?.publicationType || 'AUCTION' }}</p>
         </div>
 
-        <!-- Bid form (companies only, auction open) -->
         <div v-if="auth.isCompany && auction.status === 'OPEN'" class="bg-white rounded-2xl shadow p-6">
           <h2 class="font-semibold text-slate-800 mb-3">Place Your Bid</h2>
           <div class="flex gap-3">
-            <input v-model.number="bidAmount" type="number" :min="auction.minBid"
+            <input
+              v-model.number="bidAmount"
+              type="number"
+              :min="auction.minBid"
               class="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter bid amount ($)" />
-            <button @click="placeBid"
-              class="bg-blue-600 text-white rounded-xl px-5 py-2 text-sm font-semibold hover:bg-blue-700">
+              placeholder="Enter bid amount ($)"
+            />
+            <button
+              @click="placeBid"
+              class="bg-blue-600 text-white rounded-xl px-5 py-2 text-sm font-semibold hover:bg-blue-700"
+            >
               Bid
             </button>
           </div>
@@ -27,13 +33,15 @@
           <p v-if="bidSuccess" class="text-green-600 text-xs mt-2">{{ bidSuccess }}</p>
         </div>
 
-        <!-- Public bid history -->
         <div class="bg-white rounded-2xl shadow p-6">
           <h2 class="font-semibold text-slate-800 mb-3">All Bids (Public)</h2>
           <div v-if="auction.bids?.length === 0" class="text-slate-400 text-sm">No bids yet</div>
           <div v-else class="space-y-2">
-            <div v-for="(bid, i) in sortedBids" :key="bid.id"
-              class="flex justify-between items-center text-sm py-2 border-b last:border-0">
+            <div
+              v-for="(bid, i) in sortedBids"
+              :key="bid.id"
+              class="flex justify-between items-center text-sm py-2 border-b last:border-0"
+            >
               <div class="flex items-center gap-2">
                 <span v-if="i === 0" class="text-yellow-500 font-bold text-base">👑</span>
                 <span class="text-slate-700 font-medium">{{ bid.company?.companyName ?? 'Company' }}</span>
@@ -46,9 +54,8 @@
           </div>
         </div>
 
-        <!-- Finalists -->
         <div v-if="auction.finalists?.length > 0" class="bg-green-50 rounded-2xl shadow p-6">
-          <h2 class="font-semibold text-green-800 mb-3">🏆 Finalists Selected</h2>
+          <h2 class="font-semibold text-green-800 mb-3">🏆 Top Bids</h2>
           <div v-for="f in auction.finalists" :key="f.id" class="text-sm text-green-700 py-1">
             Company ID: {{ f.companyId }} — Bid: ${{ f.bidAmount.toLocaleString() }}
           </div>
@@ -58,35 +65,14 @@
           <h2 class="font-semibold text-slate-800">Government Controls</h2>
           <button
             v-if="auction.status === 'OPEN'"
-            @click="selectFinalists"
+            @click="closeAndAwardAuction"
             class="w-full bg-indigo-600 text-white rounded-xl px-5 py-2 text-sm font-semibold hover:bg-indigo-700"
           >
-            Select Finalists
+            Close Auction & Award
           </button>
-
-          <div v-if="auction.status === 'CLOSED' && !auction.tender" class="space-y-2">
-            <label class="block text-sm text-slate-600">Tender deadline</label>
-            <input
-              v-model="tenderDeadline"
-              type="datetime-local"
-              class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-            />
-            <button
-              @click="createTender"
-              class="w-full bg-blue-600 text-white rounded-xl px-5 py-2 text-sm font-semibold hover:bg-blue-700"
-            >
-              Start Tender Phase
-            </button>
-          </div>
-
-          <router-link
-            v-if="auction.tender"
-            :to="`/tenders/${auction.tender.id}`"
-            class="block text-center bg-emerald-600 text-white rounded-xl px-5 py-2 text-sm font-semibold hover:bg-emerald-700"
-          >
-            Open Tender
-          </router-link>
-
+          <p v-else class="text-xs text-slate-500">
+            Auction already closed. Zone remains in auction path (no tender transition).
+          </p>
           <p v-if="govMsg" class="text-green-600 text-xs">{{ govMsg }}</p>
           <p v-if="govErr" class="text-red-500 text-xs">{{ govErr }}</p>
         </div>
@@ -109,7 +95,6 @@ const auction = ref<any>(null)
 const bidAmount = ref<number>(0)
 const bidError = ref('')
 const bidSuccess = ref('')
-const tenderDeadline = ref('')
 const govMsg = ref('')
 const govErr = ref('')
 
@@ -136,32 +121,16 @@ async function placeBid() {
   }
 }
 
-async function selectFinalists() {
+async function closeAndAwardAuction() {
   govErr.value = ''
   govMsg.value = ''
   try {
     await api.post(`/auctions/${auction.value.id}/finalists`)
-    govMsg.value = 'Finalists selected successfully.'
+    govMsg.value = 'Auction closed and winner awarded successfully.'
     const res = await api.get(`/auctions/${route.params.id}`)
     auction.value = res.data
   } catch (e: any) {
-    govErr.value = e.response?.data?.message ?? 'Failed to select finalists'
-  }
-}
-
-async function createTender() {
-  govErr.value = ''
-  govMsg.value = ''
-  try {
-    await api.post('/tenders', {
-      auctionId: auction.value.id,
-      deadline: new Date(tenderDeadline.value).toISOString(),
-    })
-    govMsg.value = 'Tender phase started.'
-    const res = await api.get(`/auctions/${route.params.id}`)
-    auction.value = res.data
-  } catch (e: any) {
-    govErr.value = e.response?.data?.message ?? 'Failed to start tender'
+    govErr.value = e.response?.data?.message ?? 'Failed to close auction'
   }
 }
 </script>
