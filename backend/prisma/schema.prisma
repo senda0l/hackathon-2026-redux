@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  GOV_ADMIN
+  COMPANY
+  PUBLIC
+}
+
+enum ZoneType {
+  RESIDENTIAL
+  INDUSTRIAL
+  COMMERCIAL
+  PUBLIC_INFRA
+  RESTRICTED
+}
+
+enum ZoneStatus {
+  AVAILABLE
+  IN_AUCTION
+  IN_TENDER
+  AWARDED
+  RESTRICTED
+}
+
+enum PublicationType {
+  AUCTION
+  TENDER
+}
+
+enum AuctionStatus {
+  OPEN
+  SELECTING_FINALISTS
+  CLOSED
+}
+
+enum TenderStatus {
+  OPEN
+  SCORING
+  AWARDED
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  role        Role     @default(PUBLIC)
+  companyName String?
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  bids        Bid[]
+  proposals   TenderProposal[]
+  scores      TenderScore[]
+  auditLogs   ZoneAuditLog[]
+  requests    ParcelRequest[] @relation("CompanyParcelRequests")
+  reviewedRequests ParcelRequest[] @relation("ReviewedParcelRequests")
+}
+
+model Zone {
+  id              String           @id @default(uuid())
+  sourceId        String?          @unique
+  geometry        Json
+  type            ZoneType
+  status          ZoneStatus       @default(AVAILABLE)
+  publicationType PublicationType?
+  minPrice        Float
+  description     String?
+  publishedAt     DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  auctions    Auction[]
+  tenders     Tender[]
+  auditLogs   ZoneAuditLog[]
+  requests    ParcelRequest[]
+}
+
+model ParcelRequest {
+  id          String        @id @default(uuid())
+  zone        Zone          @relation(fields: [zoneId], references: [id])
+  zoneId      String
+  company     User          @relation("CompanyParcelRequests", fields: [companyId], references: [id])
+  companyId   String
+  geometry    Json
+  status      RequestStatus @default(PENDING)
+  note        String?
+  reviewedBy  User?         @relation("ReviewedParcelRequests", fields: [reviewedById], references: [id])
+  reviewedById String?
+  reviewedAt  DateTime?
+  createdAt   DateTime      @default(now())
+}
+
+model ZoneAuditLog {
+  id          String   @id @default(uuid())
+  zone        Zone     @relation(fields: [zoneId], references: [id])
+  zoneId      String
+  oldStatus   String
+  newStatus   String
+  changedBy   User?    @relation(fields: [changedById], references: [id])
+  changedById String?
+  source      String   @default("PLATFORM")
+  reason      String?
+  changedAt   DateTime @default(now())
+}
+
+model Auction {
+  id           String        @id @default(uuid())
+  zone         Zone          @relation(fields: [zoneId], references: [id])
+  zoneId       String
+  startDate    DateTime
+  endDate      DateTime
+  minBid       Float
+  maxFinalists Int           @default(6)
+  status       AuctionStatus @default(OPEN)
+  createdAt    DateTime      @default(now())
+
+  bids      Bid[]
+  finalists AuctionFinalist[]
+  tender    Tender?
+}
+
+model Bid {
+  id        String   @id @default(uuid())
+  auction   Auction  @relation(fields: [auctionId], references: [id])
+  auctionId String
+  company   User     @relation(fields: [companyId], references: [id])
+  companyId String
+  amount    Float
+  placedAt  DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([auctionId, companyId])
+}
+
+model AuctionFinalist {
+  id        String  @id @default(uuid())
+  auction   Auction @relation(fields: [auctionId], references: [id])
+  auctionId String
+  companyId String
+  bidAmount Float
+}
+
+model Tender {
+  id        String       @id @default(uuid())
+  auction   Auction?     @relation(fields: [auctionId], references: [id])
+  auctionId String?      @unique
+  zone      Zone         @relation(fields: [zoneId], references: [id])
+  zoneId    String
+  deadline  DateTime
+  status    TenderStatus @default(OPEN)
+  createdAt DateTime     @default(now())
+
+  proposals TenderProposal[]
+}
+
+model TenderProposal {
+  id                  String    @id @default(uuid())
+  tender              Tender    @relation(fields: [tenderId], references: [id])
+  tenderId            String
+  company             User      @relation(fields: [companyId], references: [id])
+  companyId           String
+  description         String
+  constructionType    String
+  estimatedCompletion DateTime
+  budget              Float
+  documentUrl         String?
+  submittedAt         DateTime  @default(now())
+
+  score TenderScore?
+
+  @@unique([tenderId, companyId])
+}
+
+model TenderScore {
+  id            String         @id @default(uuid())
+  proposal      TenderProposal @relation(fields: [proposalId], references: [id])
+  proposalId    String         @unique
+  scoredBy      User           @relation(fields: [scoredById], references: [id])
+  scoredById    String
+  designScore   Int
+  timelineScore Int
+  socialScore   Int
+  total         Int
+  scoredAt      DateTime       @default(now())
+}
