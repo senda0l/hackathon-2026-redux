@@ -10,7 +10,7 @@
       <div
         class="bg-white rounded-xl shadow-lg px-5 py-3 flex items-center gap-3"
       >
-        <span class="text-lg font-bold text-slate-800">🏗️ ZonaPlatform</span>
+        <span class="text-lg font-bold text-slate-800">🏗️ Zonify</span>
         <span class="text-xs text-slate-400">Toshkent</span>
       </div>
       <div class="flex gap-2">

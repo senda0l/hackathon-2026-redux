@@ -69,13 +69,21 @@ export class ZonesService {
   // All zones as GeoJSON FeatureCollection (public)
   async getAllAsGeoJson() {
     const shouldSeedMock =
-      this.config.get<string>('ENABLE_MOCK_ZONES') !== 'false' &&
+      this.config.get<string>('ENABLE_MOCK_ZONES') === 'true' &&
       this.config.get<string>('NODE_ENV') !== 'production';
     if (shouldSeedMock) {
       await this.ensureMockZonesIfEmpty();
     }
 
-    const zones = await this.prisma.zone.findMany();
+    const zones = await this.prisma.zone.findMany({
+      where: {
+        NOT: {
+          sourceId: {
+            startsWith: 'mock-tashkent-',
+          },
+        },
+      },
+    });
 
     return {
       type: 'FeatureCollection',
@@ -191,7 +199,14 @@ export class ZonesService {
 
   async getAvailableZonesForPublishing() {
     return this.prisma.zone.findMany({
-      where: { status: ZoneStatus.AVAILABLE },
+      where: {
+        status: ZoneStatus.AVAILABLE,
+        NOT: {
+          sourceId: {
+            startsWith: 'mock-tashkent-',
+          },
+        },
+      },
       select: {
         id: true,
         type: true,

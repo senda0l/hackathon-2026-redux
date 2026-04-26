@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-slate-100 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
-      <h1 class="text-xl font-bold text-slate-800 mb-6">Login to ZonaPlatform</h1>
+      <h1 class="text-xl font-bold text-slate-800 mb-6">Login to Zonify</h1>
       <div class="space-y-4">
         <input v-model="email" type="email" placeholder="Email"
           class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" />

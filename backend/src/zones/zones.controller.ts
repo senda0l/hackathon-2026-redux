@@ -12,10 +12,14 @@ import { ZonesService } from './zones.service';
 import { Roles } from '../auth/roles.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { PublicationType, ZoneType } from '@prisma/client';
+import { ZonesSeedService } from './zones-seed.service';
 
 @Controller('zones')
 export class ZonesController {
-  constructor(private zones: ZonesService) {}
+  constructor(
+    private zones: ZonesService,
+    private zonesSeed: ZonesSeedService,
+  ) {}
 
   @Get('publishable')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -150,5 +154,12 @@ export class ZonesController {
   @Roles('GOV_ADMIN')
   sync() {
     return this.zones.syncFromGovApi();
+  }
+
+  @Post('import')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('GOV_ADMIN')
+  importZones() {
+    return this.zonesSeed.importFromFile();
   }
 }
